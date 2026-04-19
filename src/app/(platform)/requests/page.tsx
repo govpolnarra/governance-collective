@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, FormEvent } from 'react'
 import { createBrowserClient } from '@/lib/supabase/client'
 
 export default function RequestsPage() {
@@ -15,7 +15,7 @@ export default function RequestsPage() {
     })
   }, [])
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setLoading(true)
     const { data: { user } } = await supabase.auth.getUser()
@@ -40,28 +40,30 @@ export default function RequestsPage() {
           {showForm ? 'Cancel' : 'Post a Request'}
         </button>
       </div>
-      <p className="text-slate-500 mb-6">Ask the community for help, introductions, or resources.</p>
+      <p className="text-slate-500 mb-8">Ask the community for help, introductions, or resources.</p>
+
       {showForm && (
-        <form onSubmit={handleSubmit} className="card p-5 mb-6 space-y-4">
+        <form onSubmit={handleSubmit} className="card p-6 mb-8 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-ink mb-1">Request Title</label>
-            <input required className="input w-full" placeholder="What do you need?" value={form.title} onChange={e => setForm({...form, title: e.target.value})} />
+            <label className="label">Request Title</label>
+            <input required className="input w-full" placeholder="What do you need?" value={form.title} onChange={(e) => setForm({...form, title: e.target.value})} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-ink mb-1">Type</label>
-            <select className="input w-full" value={form.type} onChange={e => setForm({...form, type: e.target.value})}>
+            <label className="label">Type</label>
+            <select className="input w-full" value={form.type} onChange={(e) => setForm({...form, type: e.target.value})}>
               <option value="help">Help / Advice</option>
               <option value="intro">Introduction</option>
               <option value="resource">Resource</option>
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-ink mb-1">Details</label>
-            <textarea required rows={4} className="input w-full" placeholder="Provide context..." value={form.description} onChange={e => setForm({...form, description: e.target.value})} />
+            <label className="label">Details</label>
+            <textarea required rows={4} className="input w-full" placeholder="Provide context..." value={form.description} onChange={(e) => setForm({...form, description: e.target.value})} />
           </div>
           <button type="submit" disabled={loading} className="btn-primary">{loading ? 'Posting...' : 'Post Request'}</button>
         </form>
       )}
+
       <div className="space-y-4">
         {requests.length === 0 && <p className="text-slate-400 text-center py-8">No requests yet. Be the first!</p>}
         {requests.map((r: any) => (
