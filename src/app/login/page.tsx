@@ -3,6 +3,8 @@ import { useState, FormEvent } from 'react';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== 'undefined' ? window.location.origin : '');
+
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -18,7 +20,7 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: `${SITE_URL}/auth/callback`,
       },
     });
     if (error) {
@@ -34,7 +36,7 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${SITE_URL}/auth/callback`,
       },
     });
     if (error) setError(error.message);
@@ -63,13 +65,11 @@ export default function LoginPage() {
           <h1 className="text-2xl font-bold text-ink">Governance Collective</h1>
           <p className="text-slate-500 mt-1">Sign in to your account</p>
         </div>
-
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">
             {error}
           </div>
         )}
-
         <form onSubmit={handleMagicLink} className="space-y-4">
           <div>
             <label className="label">Email address</label>
@@ -86,7 +86,6 @@ export default function LoginPage() {
             {loading ? 'Sending...' : 'Send Magic Link'}
           </button>
         </form>
-
         <div className="relative my-6">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-slate-200" />
@@ -95,11 +94,9 @@ export default function LoginPage() {
             <span className="px-2 bg-white text-slate-400">or</span>
           </div>
         </div>
-
         <button onClick={handleGoogleLogin} disabled={loading} className="btn-secondary w-full">
           Continue with Google
         </button>
-
         <p className="text-center text-xs text-slate-400 mt-6">
           By signing in, you agree to our terms. This is an invite-only platform.
         </p>
