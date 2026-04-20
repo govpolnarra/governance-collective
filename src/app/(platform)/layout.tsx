@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import SignOutButton from '@/components/SignOutButton';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: '🏠' },
@@ -8,6 +9,8 @@ const navItems = [
   { href: '/solutions', label: 'Solutions', icon: '✅' },
   { href: '/requests', label: 'Requests', icon: '📌' },
   { href: '/learning', label: 'Learning', icon: '🎓' },
+  { href: '/bookmarks', label: 'Bookmarks', icon: '🔖' },
+  { href: '/my-submissions', label: 'My Submissions', icon: '📤' },
 ];
 
 export default async function PlatformLayout({
@@ -18,12 +21,15 @@ export default async function PlatformLayout({
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
+
   const { data: profile } = await supabase
     .from('profiles')
     .select('full_name, role')
     .eq('id', user!.id)
     .single();
+
   const isCurator = profile?.role === 'curator' || profile?.role === 'admin';
+
   return (
     <div className="min-h-screen bg-slate-50 flex">
       {/* Sidebar */}
@@ -35,11 +41,12 @@ export default async function PlatformLayout({
             </div>
             <div>
               <p className="font-semibold text-slate-900 text-sm">Governance Collective</p>
-              <p className="text-xs text-slate-500">Phase 1</p>
+              <p className="text-xs text-slate-400">Phase 1</p>
             </div>
           </div>
         </div>
-        <nav className="flex-1 p-3 space-y-0.5">
+
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           {navItems.map((item) => (
             <Link
               key={item.href}
@@ -50,13 +57,14 @@ export default async function PlatformLayout({
               <span>{item.label}</span>
             </Link>
           ))}
+
           {isCurator && (
             <>
-              <div className="pt-3 pb-1 px-3">
-                <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">Curator</p>
+              <div className="pt-3 pb-1">
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider px-3">Curator</p>
               </div>
               <Link
-                href="/curator/queue"
+                href="/curation"
                 className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
               >
                 <span>📝</span>
@@ -65,22 +73,26 @@ export default async function PlatformLayout({
             </>
           )}
         </nav>
-        <div className="p-3 border-t border-slate-200">
-          <div className="flex items-center gap-2 px-3 py-2">
-            <div className="w-7 h-7 bg-blue-100 rounded-full flex items-center justify-center">
-              <span className="text-blue-700 font-medium text-xs">
-                {profile?.full_name?.charAt(0)?.toUpperCase() ?? 'U'}
-              </span>
+
+        <div className="p-4 border-t border-slate-200 space-y-2">
+          <Link
+            href="/profile"
+            className="flex items-center gap-3 w-full hover:bg-slate-50 rounded-lg p-2 transition-colors"
+          >
+            <div className="w-8 h-8 bg-brand-600 rounded-full flex items-center justify-center text-white text-sm font-medium shrink-0">
+              {profile?.full_name?.charAt(0)?.toUpperCase() ?? 'U'}
             </div>
-            <div className="flex-1 min-w-0">
+            <div className="min-w-0">
               <p className="text-sm font-medium text-slate-900 truncate">{profile?.full_name ?? 'User'}</p>
-              <p className="text-xs text-slate-500 capitalize">{profile?.role ?? 'contributor'}</p>
+              <p className="text-xs text-slate-400 capitalize">{profile?.role ?? 'contributor'}</p>
             </div>
-          </div>
+          </Link>
+          <SignOutButton />
         </div>
       </aside>
+
       {/* Main content */}
-      <main className="flex-1 ml-64 p-8">
+      <main className="flex-1 ml-64">
         {children}
       </main>
     </div>
