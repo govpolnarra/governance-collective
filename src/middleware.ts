@@ -22,30 +22,45 @@ export async function middleware(request: NextRequest) {
   );
 
   const { data: { user } } = await supabase.auth.getUser();
-
   const { pathname } = request.nextUrl;
 
-  // Public routes
+  // Public routes — always allow
   const publicRoutes = ['/', '/login', '/auth/callback'];
-  if (publicRoutes.includes(pathname)) {
-    return supabaseResponse;
-  }
+  if (publicRoutes.includes(pathname)) return supabaseResponse;
 
-  // Redirect unauthenticated users
+  // Unauthenticated → redirect to login
   if (!user) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     return NextResponse.redirect(url);
   }
 
-  // Curator-only routes
-  if (pathname.startsWith('/curator')) {
-    const { data: profile } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-    if (!profile || !['curator', 'admin'].includes(profile.role)) {
+  // Fetch profile once for all role/approval checks
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role, is_approved')
+    .eq('id', user.id)
+    .single();
+
+  // Invite-only gate: if is_approved is false, redirect to a pending-approval page
+  // (except admins/curators are always allowed through)
+  if (
+    profile &&
+    profile.is_approved === false &&
+    !['curator', 'admin'].includes(profile.role ?? '')
+  ) {
+    // Only block non-public, non-pending pages
+    if (pathname !== '/pending-approval') {
+      const url = request.nextUrl.clone();
+      url.pathname = '/pending-approval';
+      return NextResponse.redirect(url);
+    }
+    return supabaseResponse;
+  }
+
+  // Curator-only routes: /curation/*
+  if (pathname.startsWith('/curation')) {
+    if (!profile || !['curator', 'admin'].includes(profile.role ?? '')) {
       const url = request.nextUrl.clone();
       url.pathname = '/dashboard';
       return NextResponse.redirect(url);
