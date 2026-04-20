@@ -19,7 +19,6 @@ export default async function PlaybooksPage() {
         </div>
         <Link href="/playbooks/submit" className="btn-primary">+ Submit a Playbook</Link>
       </div>
-
       {!playbooks || playbooks.length === 0 ? (
         <div className="card p-12 text-center">
           <p className="text-slate-400 text-lg mb-2">No playbooks published yet.</p>
@@ -29,7 +28,7 @@ export default async function PlaybooksPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {(playbooks as Playbook[]).map((p) => (
-            <div key={p.id} className="card p-5 hover:shadow-md transition-shadow">
+            <Link key={p.id} href={`/playbooks/${p.id}`} className="card p-5 hover:shadow-md transition-shadow block">
               <div className="flex items-start justify-between mb-2">
                 <span className="text-xs uppercase tracking-wide text-emerald-700 font-semibold">{p.sector}</span>
                 {p.state && <span className="text-xs text-slate-400">{p.state}</span>}
@@ -47,7 +46,7 @@ export default async function PlaybooksPage() {
                 By {(p as any).profiles?.full_name ?? 'Unknown'}
                 {(p as any).profiles?.organisation ? ` · ${(p as any).profiles.organisation}` : ''}
               </p>
-            </div>
+            </Link>
           ))}
         </div>
       )}
