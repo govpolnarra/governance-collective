@@ -41,11 +41,6 @@ export default async function LearningDetailPage({
                 {RESOURCE_TYPE_LABELS[resource.resource_type] || resource.resource_type}
               </span>
             )}
-            {resource.sector && (
-              <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded">
-                {resource.sector}
-              </span>
-            )}
           </div>
           <h1 className="text-2xl font-bold text-slate-900">{resource.title}</h1>
           {profile && (
@@ -55,23 +50,23 @@ export default async function LearningDetailPage({
           )}
         </div>
 
-        {resource.description && (
+        {resource.summary && (
           <div>
-            <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">Description</h2>
-            <p className="text-slate-700 whitespace-pre-wrap">{resource.description}</p>
+            <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">Summary</h2>
+            <p className="text-slate-700 whitespace-pre-wrap">{resource.summary}</p>
           </div>
         )}
 
-        {resource.url && (
+        {resource.resource_url && (
           <div>
             <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">Resource Link</h2>
             <a
-              href={resource.url}
+              href={resource.resource_url}
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-600 hover:text-blue-800 underline break-all"
             >
-              {resource.url}
+              {resource.resource_url}
             </a>
           </div>
         )}
