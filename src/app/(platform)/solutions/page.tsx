@@ -31,10 +31,9 @@ export default async function SolutionsPage() {
             <Link key={s.id} href={`/solutions/${s.id}`} className="card p-5 hover:shadow-md transition-shadow block">
               <div className="flex items-start justify-between mb-2">
                 <span className="text-xs uppercase tracking-wide text-blue-700 font-semibold">{s.sector}</span>
-                {s.state && <span className="text-xs text-slate-400">{s.state}</span>}
               </div>
-              <h2 className="font-semibold text-slate-900 mt-1 mb-2 line-clamp-2">{s.title}</h2>
-              <p className="text-sm text-slate-500 line-clamp-3 mb-3">{s.summary}</p>
+              <h2 className="font-semibold text-slate-900 mt-1 mb-2 line-clamp-2">{s.name}</h2>
+              <p className="text-sm text-slate-500 line-clamp-3 mb-3">{s.description}</p>
               {s.tags && s.tags.length > 0 && (
                 <div className="flex flex-wrap gap-1 mb-3">
                   {s.tags.map((t: string) => (
