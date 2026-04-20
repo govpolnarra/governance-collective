@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import BookmarkButton from '@/components/BookmarkButton'
 
 export default async function SolutionDetailPage({
   params,
@@ -8,6 +9,7 @@ export default async function SolutionDetailPage({
   params: { id: string }
 }) {
   const supabase = await createClient()
+
   const { data: solution } = await supabase
     .from('solutions')
     .select('*, profiles(full_name, organisation, avatar_url)')
@@ -17,6 +19,20 @@ export default async function SolutionDetailPage({
   if (!solution) notFound()
 
   const profile = (solution as any).profiles
+
+  // Check if current user has bookmarked this
+  const { data: { user } } = await supabase.auth.getUser()
+  let isBookmarked = false
+  if (user) {
+    const { data: bookmark } = await supabase
+      .from('bookmarks')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('content_type', 'solution')
+      .eq('content_id', params.id)
+      .maybeSingle()
+    isBookmarked = !!bookmark
+  }
 
   return (
     <div className="max-w-3xl mx-auto py-10 px-4">
@@ -31,7 +47,16 @@ export default async function SolutionDetailPage({
               {solution.sector}
             </span>
           )}
-          <h1 className="text-2xl font-bold text-slate-900">{solution.name}</h1>
+          <div className="flex items-start justify-between gap-4">
+            <h1 className="text-2xl font-bold text-slate-900">{solution.name}</h1>
+            {user && (
+              <BookmarkButton
+                contentType="solution"
+                contentId={params.id}
+                initialBookmarked={isBookmarked}
+              />
+            )}
+          </div>
           {profile && (
             <p className="text-sm text-slate-500 mt-1">
               by {profile.full_name}{profile.organisation ? ` · ${profile.organisation}` : ''}
@@ -41,48 +66,44 @@ export default async function SolutionDetailPage({
 
         {solution.description && (
           <div>
-            <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">Description</h2>
-            <p className="text-slate-700 whitespace-pre-wrap">{solution.description}</p>
+            <h2 className="text-lg font-semibold text-slate-800 mb-2">Description</h2>
+            <p className="text-slate-600 leading-relaxed">{solution.description}</p>
           </div>
         )}
 
         {solution.problem_addressed && (
           <div>
-            <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">Problem Addressed</h2>
-            <p className="text-slate-700 whitespace-pre-wrap">{solution.problem_addressed}</p>
+            <h2 className="text-lg font-semibold text-slate-800 mb-2">Problem Addressed</h2>
+            <p className="text-slate-600 leading-relaxed">{solution.problem_addressed}</p>
           </div>
         )}
 
         {solution.implementation_details && (
           <div>
-            <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">Implementation Details</h2>
-            <p className="text-slate-700 whitespace-pre-wrap">{solution.implementation_details}</p>
+            <h2 className="text-lg font-semibold text-slate-800 mb-2">Implementation Details</h2>
+            <p className="text-slate-600 leading-relaxed">{solution.implementation_details}</p>
           </div>
         )}
 
         {solution.outcomes && (
           <div>
-            <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">Outcomes</h2>
-            <p className="text-slate-700 whitespace-pre-wrap">{solution.outcomes}</p>
+            <h2 className="text-lg font-semibold text-slate-800 mb-2">Outcomes</h2>
+            <p className="text-slate-600 leading-relaxed">{solution.outcomes}</p>
           </div>
         )}
 
         {solution.tags && solution.tags.length > 0 && (
           <div>
-            <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">Tags</h2>
+            <h2 className="text-lg font-semibold text-slate-800 mb-2">Tags</h2>
             <div className="flex flex-wrap gap-2">
               {solution.tags.map((tag: string) => (
-                <span key={tag} className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded">
-                  {tag}
-                </span>
+                <span key={tag} className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded">{tag}</span>
               ))}
             </div>
           </div>
         )}
 
-        <div className="text-xs text-slate-400 border-t border-slate-100 pt-4">
-          Published {new Date(solution.created_at).toLocaleDateString()}
-        </div>
+        <p className="text-xs text-slate-400">Published {new Date(solution.created_at).toLocaleDateString()}</p>
       </div>
     </div>
   )
