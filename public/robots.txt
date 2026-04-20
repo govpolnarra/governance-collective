@@ -1,0 +1,4 @@
+# Governance Collective is an invite-only platform.
+# Block all crawlers.
+User-agent: *
+Disallow: /
