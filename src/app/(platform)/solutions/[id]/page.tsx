@@ -26,32 +26,18 @@ export default async function SolutionDetailPage({
 
       <div className="bg-white rounded-xl border border-slate-200 p-8 space-y-6">
         <div>
-          <div className="flex items-center gap-2 mb-2">
-            {solution.sector && (
-              <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded font-medium">
-                {solution.sector}
-              </span>
-            )}
-            {solution.state && (
-              <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded">
-                {solution.state}
-              </span>
-            )}
-          </div>
-          <h1 className="text-2xl font-bold text-slate-900">{solution.title}</h1>
+          {solution.sector && (
+            <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded font-medium mb-2 inline-block">
+              {solution.sector}
+            </span>
+          )}
+          <h1 className="text-2xl font-bold text-slate-900">{solution.name}</h1>
           {profile && (
             <p className="text-sm text-slate-500 mt-1">
               by {profile.full_name}{profile.organisation ? ` · ${profile.organisation}` : ''}
             </p>
           )}
         </div>
-
-        {solution.summary && (
-          <div>
-            <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">Summary</h2>
-            <p className="text-slate-700">{solution.summary}</p>
-          </div>
-        )}
 
         {solution.description && (
           <div>
@@ -60,10 +46,24 @@ export default async function SolutionDetailPage({
           </div>
         )}
 
-        {solution.implementation_notes && (
+        {solution.problem_addressed && (
           <div>
-            <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">Implementation Notes</h2>
-            <p className="text-slate-700 whitespace-pre-wrap">{solution.implementation_notes}</p>
+            <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">Problem Addressed</h2>
+            <p className="text-slate-700 whitespace-pre-wrap">{solution.problem_addressed}</p>
+          </div>
+        )}
+
+        {solution.implementation_details && (
+          <div>
+            <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">Implementation Details</h2>
+            <p className="text-slate-700 whitespace-pre-wrap">{solution.implementation_details}</p>
+          </div>
+        )}
+
+        {solution.outcomes && (
+          <div>
+            <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">Outcomes</h2>
+            <p className="text-slate-700 whitespace-pre-wrap">{solution.outcomes}</p>
           </div>
         )}
 
