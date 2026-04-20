@@ -41,12 +41,11 @@ export default async function LearningPage() {
             <Link key={r.id} href={`/learning/${r.id}`} className="card p-5 hover:shadow-md transition-shadow block">
               <div className="flex items-start justify-between mb-2">
                 <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded font-medium">
-                  {RESOURCE_TYPES[r.resource_type] || r.resource_type}
+                  {RESOURCE_TYPES[r.resource_type as string] || r.resource_type}
                 </span>
-                {r.sector && <span className="text-xs text-slate-400">{r.sector}</span>}
               </div>
               <h2 className="font-semibold text-slate-900 mt-2 mb-2 line-clamp-2">{r.title}</h2>
-              <p className="text-sm text-slate-500 line-clamp-3 mb-3">{r.description}</p>
+              <p className="text-sm text-slate-500 line-clamp-3 mb-3">{r.summary}</p>
               {r.tags && r.tags.length > 0 && (
                 <div className="flex flex-wrap gap-1 mb-3">
                   {r.tags.map((t: string) => (
