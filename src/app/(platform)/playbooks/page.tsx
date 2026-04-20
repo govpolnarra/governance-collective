@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import type { Playbook } from '@/lib/types/database'
+import SearchFilter from '@/components/SearchFilter'
 
 export default async function PlaybooksPage() {
   const supabase = await createClient()
@@ -10,8 +10,19 @@ export default async function PlaybooksPage() {
     .eq('status', 'published')
     .order('created_at', { ascending: false })
 
+  const items = (playbooks ?? []).map((p: any) => ({
+    id: p.id,
+    title: p.title,
+    sector: p.sector,
+    tags: p.tags,
+    summary: p.summary,
+    state: p.state,
+    author: p.profiles?.full_name ?? 'Unknown',
+    organisation: p.profiles?.organisation ?? '',
+  }))
+
   return (
-    <div className="max-w-5xl mx-auto p-6">
+    <div className="max-w-4xl mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Playbooks</h1>
@@ -19,36 +30,38 @@ export default async function PlaybooksPage() {
         </div>
         <Link href="/playbooks/submit" className="btn-primary">+ Submit a Playbook</Link>
       </div>
-      {!playbooks || playbooks.length === 0 ? (
+
+      {items.length === 0 ? (
         <div className="card p-12 text-center">
           <p className="text-slate-400 text-lg mb-2">No playbooks published yet.</p>
           <p className="text-slate-400 text-sm mb-4">Be the first to contribute field knowledge.</p>
           <Link href="/playbooks/submit" className="btn-primary mt-4 inline-block">Submit a Playbook</Link>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {(playbooks as Playbook[]).map((p) => (
-            <Link key={p.id} href={`/playbooks/${p.id}`} className="card p-5 hover:shadow-md transition-shadow block">
+        <SearchFilter
+          items={items}
+          placeholder="Search playbooks by title, sector, or tag..."
+          renderItem={(item: any) => (
+            <Link key={item.id} href={`/playbooks/${item.id}`} className="card p-5 hover:shadow-md transition-shadow block">
               <div className="flex items-start justify-between mb-2">
-                <span className="text-xs uppercase tracking-wide text-emerald-700 font-semibold">{p.sector}</span>
-                {p.state && <span className="text-xs text-slate-400">{p.state}</span>}
+                <div className="flex items-center gap-2 flex-wrap">
+                  {item.sector && <span className="text-xs uppercase tracking-wide text-emerald-700 font-semibold">{item.sector}</span>}
+                  {item.state && <span className="text-xs text-slate-400">{item.state}</span>}
+                </div>
               </div>
-              <h2 className="font-semibold text-slate-900 mt-1 mb-2 line-clamp-2">{p.title}</h2>
-              <p className="text-sm text-slate-500 line-clamp-3 mb-3">{p.summary}</p>
-              {p.tags && p.tags.length > 0 && (
-                <div className="flex flex-wrap gap-1 mb-3">
-                  {p.tags.map((t: string) => (
-                    <span key={t} className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded">{t}</span>
+              <h2 className="text-base font-semibold text-slate-800 mb-1">{item.title}</h2>
+              {item.summary && <p className="text-sm text-slate-500 line-clamp-2 mb-2">{item.summary}</p>}
+              {item.tags && item.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1 mb-2">
+                  {item.tags.map((t: string) => (
+                    <span key={t} className="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded">{t}</span>
                   ))}
                 </div>
               )}
-              <p className="text-xs text-slate-400">
-                By {(p as any).profiles?.full_name ?? 'Unknown'}
-                {(p as any).profiles?.organisation ? ` · ${(p as any).profiles.organisation}` : ''}
-              </p>
+              <p className="text-xs text-slate-400">By {item.author}{item.organisation ? ` · ${item.organisation}` : ''}</p>
             </Link>
-          ))}
-        </div>
+          )}
+        />
       )}
     </div>
   )
