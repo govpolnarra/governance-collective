@@ -23,5 +23,29 @@ export default async function CurationQueuePage() {
     .eq('status', 'pending_review')
     .order('created_at', { ascending: true })
 
-  return <CurationClient queue={queue ?? []} userRole={profile.role} />
+  // Enrich each queue item with a human-readable title by fetching from the source table
+  const enriched = await Promise.all(
+    (queue ?? []).map(async (item) => {
+      let title = item.content_id // fallback
+      let contentHref = '#'
+
+      if (item.content_type === 'playbook') {
+        const { data } = await supabase.from('playbooks').select('title').eq('id', item.content_id).single()
+        if (data) { title = data.title; contentHref = `/playbooks/${item.content_id}` }
+      } else if (item.content_type === 'solution') {
+        const { data } = await supabase.from('solutions').select('name').eq('id', item.content_id).single()
+        if (data) { title = data.name; contentHref = `/solutions/${item.content_id}` }
+      } else if (item.content_type === 'learning_resource') {
+        const { data } = await supabase.from('learning_resources').select('title').eq('id', item.content_id).single()
+        if (data) { title = data.title; contentHref = `/learning/${item.content_id}` }
+      } else if (item.content_type === 'request') {
+        const { data } = await supabase.from('requests').select('title').eq('id', item.content_id).single()
+        if (data) { title = data.title; contentHref = `/requests/${item.content_id}` }
+      }
+
+      return { ...item, contentTitle: title, contentHref }
+    })
+  )
+
+  return <CurationClient queue={enriched} userRole={profile.role} />
 }
