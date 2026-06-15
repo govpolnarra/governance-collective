@@ -11,9 +11,13 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [passwordSaving, setPasswordSaving] = useState(false)
+  const [passwordSuccess, setPasswordSuccess] = useState(false)
+  const [passwordError, setPasswordError] = useState<string | null>(null)
   const [form, setForm] = useState({
     full_name: '', bio: '', organisation: '', location: '', linkedin_url: '', expertise: ''
   })
+  const [passwordForm, setPasswordForm] = useState({ password: '', confirmPassword: '' })
   const [role, setRole] = useState('')
   const [userId, setUserId] = useState('')
 
@@ -71,6 +75,35 @@ export default function ProfilePage() {
       setForm(prev => ({ ...prev, [key]: e.target.value }))
   })
 
+  const handlePasswordSubmit = async (e: FormEvent) => {
+    e.preventDefault()
+    setPasswordSaving(true)
+    setPasswordError(null)
+    setPasswordSuccess(false)
+
+    if (passwordForm.password.length < 8) {
+      setPasswordError('Use at least 8 characters.')
+      setPasswordSaving(false)
+      return
+    }
+    if (passwordForm.password !== passwordForm.confirmPassword) {
+      setPasswordError('Passwords do not match.')
+      setPasswordSaving(false)
+      return
+    }
+
+    const { error: updateError } = await supabase.auth.updateUser({ password: passwordForm.password })
+    if (updateError) {
+      setPasswordError(updateError.message)
+      setPasswordSaving(false)
+      return
+    }
+
+    setPasswordForm({ password: '', confirmPassword: '' })
+    setPasswordSuccess(true)
+    setPasswordSaving(false)
+  }
+
   if (loading) return <div className="max-w-2xl mx-auto p-6 text-slate-400">Loading profile...</div>
 
   return (
@@ -119,6 +152,45 @@ export default function ProfilePage() {
           {saving ? 'Saving...' : 'Save Profile'}
         </button>
       </form>
+
+      <div className="mt-6">
+        {passwordError && <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg p-3 mb-4">{passwordError}</div>}
+        {passwordSuccess && <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm rounded-lg p-3 mb-4">Password saved. You can now sign in with either password or magic link.</div>}
+
+        <form onSubmit={handlePasswordSubmit} className="card p-6 space-y-4">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900">Password sign-in</h2>
+            <p className="text-sm text-slate-500 mt-1">Set a password after your first magic-link login. You can continue using magic links whenever needed.</p>
+          </div>
+          <div>
+            <label className="label">New password</label>
+            <input
+              type="password"
+              required
+              minLength={8}
+              className="input w-full"
+              placeholder="At least 8 characters"
+              value={passwordForm.password}
+              onChange={(e) => setPasswordForm(prev => ({ ...prev, password: e.target.value }))}
+            />
+          </div>
+          <div>
+            <label className="label">Confirm password</label>
+            <input
+              type="password"
+              required
+              minLength={8}
+              className="input w-full"
+              placeholder="Repeat password"
+              value={passwordForm.confirmPassword}
+              onChange={(e) => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+            />
+          </div>
+          <button type="submit" disabled={passwordSaving} className="btn-secondary w-full">
+            {passwordSaving ? 'Saving password...' : 'Set / Change Password'}
+          </button>
+        </form>
+      </div>
     </div>
   )
 }

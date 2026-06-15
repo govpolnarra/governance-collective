@@ -1,16 +1,37 @@
 'use client';
-import { useState, FormEvent } from 'react';
+import { useEffect, useState, FormEvent } from 'react';
 import { createBrowserClient, isSupabaseConfigured } from '@/lib/supabase/client';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== 'undefined' ? window.location.origin : '');
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [mode, setMode] = useState<'magic' | 'password'>('magic');
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
   const authConfigured = isSupabaseConfigured();
   const supabase = createBrowserClient();
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const emailParam = params.get('email');
+    const messageParam = params.get('message');
+    if (emailParam) setEmail(emailParam);
+    if (messageParam) setError(messageParam);
+  }, []);
+
+  function friendlyAuthError(message: string) {
+    const lower = message.toLowerCase();
+    if (lower.includes('rate') || lower.includes('too many')) {
+      return 'Email sign-in is temporarily rate limited for this address. Use password sign-in if you have set one, or wait a few minutes before requesting another magic link.';
+    }
+    if (lower.includes('invalid login credentials')) {
+      return 'That email/password combination was not recognised. If this is your first login, use a magic link first, then set a password from Profile.';
+    }
+    return message;
+  }
 
   async function handleMagicLink(e: FormEvent) {
     e.preventDefault();
@@ -27,11 +48,28 @@ export default function LoginPage() {
       },
     });
     if (error) {
-      setError(error.message);
+      setError(friendlyAuthError(error.message));
     } else {
       setSent(true);
     }
     setLoading(false);
+  }
+
+  async function handlePasswordSignIn(e: FormEvent) {
+    e.preventDefault();
+    if (!authConfigured) {
+      setError('Authentication is not configured yet. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      setError(friendlyAuthError(error.message));
+      setLoading(false);
+      return;
+    }
+    window.location.href = '/dashboard';
   }
 
   if (sent) {
@@ -56,7 +94,7 @@ export default function LoginPage() {
             GC
           </div>
           <h1 className="text-xl font-bold text-slate-900">Governance Collective</h1>
-          <p className="text-slate-500 text-sm">Sign in to your account</p>
+          <p className="text-slate-500 text-sm">Invite-only access for governance problem-solvers</p>
         </div>
 
         {error && (
@@ -69,7 +107,24 @@ export default function LoginPage() {
           </div>
         )}
 
-        <form onSubmit={handleMagicLink} className="space-y-4">
+        <div className="grid grid-cols-2 gap-2 rounded-lg bg-slate-100 p-1">
+          <button
+            type="button"
+            onClick={() => { setMode('magic'); setError(''); }}
+            className={`rounded-md px-3 py-2 text-sm font-medium ${mode === 'magic' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'}`}
+          >
+            Magic link
+          </button>
+          <button
+            type="button"
+            onClick={() => { setMode('password'); setError(''); }}
+            className={`rounded-md px-3 py-2 text-sm font-medium ${mode === 'password' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'}`}
+          >
+            Password
+          </button>
+        </div>
+
+        <form onSubmit={mode === 'magic' ? handleMagicLink : handlePasswordSignIn} className="space-y-4">
           <div>
             <label className="label">Email address</label>
             <input
@@ -81,8 +136,24 @@ export default function LoginPage() {
               className="input w-full"
             />
           </div>
+
+          {mode === 'password' && (
+            <div>
+              <label className="label">Password</label>
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Your password"
+                className="input w-full"
+              />
+              <p className="text-xs text-slate-400 mt-1">First login still happens by magic link. Set your password from Profile after entering.</p>
+            </div>
+          )}
+
           <button type="submit" disabled={loading} className="btn-primary w-full">
-            {loading ? 'Sending...' : 'Send Magic Link'}
+            {loading ? (mode === 'magic' ? 'Sending...' : 'Signing in...') : (mode === 'magic' ? 'Send Magic Link' : 'Sign in with Password')}
           </button>
         </form>
 
