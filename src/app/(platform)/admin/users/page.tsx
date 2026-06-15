@@ -18,7 +18,7 @@ export default async function AdminUsersPage() {
 
   const { data: profiles } = await supabase
     .from('profiles')
-    .select('id,full_name,email,organisation,role,access_tier,is_approved,created_at')
+    .select('id,full_name,email,organisation,role,access_tier,is_approved,password_set,created_at')
     .order('created_at', { ascending: false })
     .limit(100)
 
@@ -40,6 +40,7 @@ export default async function AdminUsersPage() {
               <th className="px-4 py-3 font-medium">Role</th>
               <th className="px-4 py-3 font-medium">Access</th>
               <th className="px-4 py-3 font-medium">Approval</th>
+              <th className="px-4 py-3 font-medium">Password</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -54,6 +55,9 @@ export default async function AdminUsersPage() {
                 <td className="px-4 py-3 text-slate-600">{profile.access_tier ?? 'registered'}</td>
                 <td className="px-4 py-3">
                   <span className={`text-xs px-2 py-0.5 rounded-full ${profile.is_approved ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>{profile.is_approved ? 'Approved' : 'Pending'}</span>
+                </td>
+                <td className="px-4 py-3">
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${profile.password_set ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>{profile.password_set ? 'Set' : 'Required'}</span>
                 </td>
               </tr>
             ))}

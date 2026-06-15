@@ -3,6 +3,7 @@ import { useEffect, useState, FormEvent } from 'react';
 import { createBrowserClient, isSupabaseConfigured } from '@/lib/supabase/client';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== 'undefined' ? window.location.origin : '');
+const MAGIC_LINK_COOLDOWN_MS = 90_000;
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -11,6 +12,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
+  const [cooldownUntil, setCooldownUntil] = useState(0);
   const authConfigured = isSupabaseConfigured();
   const supabase = createBrowserClient();
 
@@ -21,6 +23,19 @@ export default function LoginPage() {
     if (emailParam) setEmail(emailParam);
     if (messageParam) setError(messageParam);
   }, []);
+
+  useEffect(() => {
+    if (!email) {
+      setCooldownUntil(0);
+      return;
+    }
+    const refreshCooldown = () => {
+      setCooldownUntil(Number(window.localStorage.getItem(`gc_magic_link_until:${email.toLowerCase()}`) ?? 0));
+    };
+    refreshCooldown();
+    const timer = window.setInterval(refreshCooldown, 1000);
+    return () => window.clearInterval(timer);
+  }, [email]);
 
   function friendlyAuthError(message: string) {
     const lower = message.toLowerCase();
@@ -39,6 +54,11 @@ export default function LoginPage() {
       setError('Authentication is not configured yet. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.');
       return;
     }
+    const cooldownRemainingMs = cooldownUntil - Date.now();
+    if (cooldownRemainingMs > 0) {
+      setError(`A magic link was already requested for this email. Try again in ${Math.ceil(cooldownRemainingMs / 1000)} seconds, or use password sign-in if you have set one.`);
+      return;
+    }
     setLoading(true);
     setError('');
     const { error } = await supabase.auth.signInWithOtp({
@@ -50,10 +70,16 @@ export default function LoginPage() {
     if (error) {
       setError(friendlyAuthError(error.message));
     } else {
+      const nextAllowedAt = Date.now() + MAGIC_LINK_COOLDOWN_MS;
+      window.localStorage.setItem(`gc_magic_link_until:${email.toLowerCase()}`, String(nextAllowedAt));
+      setCooldownUntil(nextAllowedAt);
       setSent(true);
     }
     setLoading(false);
   }
+
+  const cooldownRemainingMs = Math.max(0, cooldownUntil - Date.now());
+  const magicLinkDisabled = loading || (mode === 'magic' && cooldownRemainingMs > 0);
 
   async function handlePasswordSignIn(e: FormEvent) {
     e.preventDefault();
@@ -152,8 +178,14 @@ export default function LoginPage() {
             </div>
           )}
 
-          <button type="submit" disabled={loading} className="btn-primary w-full">
-            {loading ? (mode === 'magic' ? 'Sending...' : 'Signing in...') : (mode === 'magic' ? 'Send Magic Link' : 'Sign in with Password')}
+          {mode === 'magic' && cooldownRemainingMs > 0 && (
+            <p className="text-xs text-amber-700">
+              Magic link already requested. Try again in {Math.ceil(cooldownRemainingMs / 1000)} seconds, or use password sign-in.
+            </p>
+          )}
+
+          <button type="submit" disabled={magicLinkDisabled} className="btn-primary w-full">
+            {loading ? (mode === 'magic' ? 'Sending...' : 'Signing in...') : (mode === 'magic' ? (cooldownRemainingMs > 0 ? 'Magic Link Recently Sent' : 'Send Magic Link') : 'Sign in with Password')}
           </button>
         </form>
 

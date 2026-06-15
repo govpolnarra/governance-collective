@@ -32,6 +32,7 @@ export interface Profile {
   role: UserRole
   access_tier: AccessTier | null
   is_approved: boolean
+  password_set: boolean
   linkedin_url: string | null
   email: string | null
   phone: string | null

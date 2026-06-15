@@ -99,6 +99,17 @@ export default function ProfilePage() {
       return
     }
 
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update({ password_set: true })
+      .eq('id', userId)
+
+    if (profileError) {
+      setPasswordError(profileError.message)
+      setPasswordSaving(false)
+      return
+    }
+
     setPasswordForm({ password: '', confirmPassword: '' })
     setPasswordSuccess(true)
     setPasswordSaving(false)

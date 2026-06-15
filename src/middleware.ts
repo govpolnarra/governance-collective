@@ -43,7 +43,7 @@ export async function middleware(request: NextRequest) {
   // Fetch profile once for all role/approval checks
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role, is_approved')
+    .select('role, is_approved, password_set')
     .eq('id', user.id)
     .single();
 
@@ -61,6 +61,16 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(url);
     }
     return supabaseResponse;
+  }
+
+  if (
+    profile?.is_approved !== false &&
+    profile?.password_set === false &&
+    pathname !== '/set-password'
+  ) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/set-password';
+    return NextResponse.redirect(url);
   }
 
   // Curator-only routes: /curation/*
