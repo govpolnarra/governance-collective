@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { isAdminRole, roleLabel } from '@/lib/access'
+import InviteUserForm from './InviteUserForm'
 
 export default async function AdminUsersPage() {
   const supabase = await createClient()
@@ -25,8 +26,10 @@ export default async function AdminUsersPage() {
     <div className="max-w-6xl mx-auto p-6">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-slate-900">User Approvals</h1>
-        <p className="text-slate-500 mt-1">Review approval, role, and access-tier state. Role updates can be wired here after the first production policy review.</p>
+        <p className="text-slate-500 mt-1">Review approval, role, access-tier state, and send invite-only onboarding emails.</p>
       </div>
+
+      <InviteUserForm />
 
       <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
         <table className="w-full text-sm">

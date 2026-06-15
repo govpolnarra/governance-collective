@@ -1,6 +1,6 @@
 'use client';
 import { useState, FormEvent } from 'react';
-import { createBrowserClient } from '@/lib/supabase/client';
+import { createBrowserClient, isSupabaseConfigured } from '@/lib/supabase/client';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== 'undefined' ? window.location.origin : '');
 
@@ -9,10 +9,15 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
+  const authConfigured = isSupabaseConfigured();
   const supabase = createBrowserClient();
 
   async function handleMagicLink(e: FormEvent) {
     e.preventDefault();
+    if (!authConfigured) {
+      setError('Authentication is not configured yet. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.');
+      return;
+    }
     setLoading(true);
     setError('');
     const { error } = await supabase.auth.signInWithOtp({
@@ -56,6 +61,12 @@ export default function LoginPage() {
 
         {error && (
           <div className="bg-red-50 text-red-700 text-sm px-4 py-2 rounded-lg">{error}</div>
+        )}
+
+        {!authConfigured && (
+          <div className="bg-amber-50 text-amber-800 text-sm px-4 py-3 rounded-lg">
+            Auth environment variables are missing. Magic links will work once Supabase URL and anon key are configured.
+          </div>
         )}
 
         <form onSubmit={handleMagicLink} className="space-y-4">
