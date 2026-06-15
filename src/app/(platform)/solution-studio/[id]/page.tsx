@@ -27,8 +27,8 @@ export default async function SolutionPathwayDetailPage({ params }: { params: Pr
           <span className="text-xs bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full">{pathway.visibility}</span>
           {pathway.districts ? <span className="text-xs text-slate-500">{pathway.districts.district_name}, {pathway.districts.state}</span> : null}
         </div>
-        <h1 className="text-3xl font-bold text-slate-900">{pathway.title}</h1>
-        <p className="text-slate-600 mt-2 max-w-3xl">{pathway.architecture_summary}</p>
+        <h1 className="text-3xl font-bold text-slate-900">{pathway.title ?? 'Untitled pathway'}</h1>
+        <p className="text-slate-600 mt-2 max-w-3xl">{pathway.architecture_summary ?? pathway.problem_statement ?? 'Draft pathway brief.'}</p>
       </div>
 
       <div className="grid lg:grid-cols-[1.4fr_0.9fr] gap-5">
@@ -44,13 +44,13 @@ export default async function SolutionPathwayDetailPage({ params }: { params: Pr
           <div className="bg-white border border-slate-200 rounded-lg p-5">
             <h2 className="font-semibold text-slate-900 mb-3">Government levers</h2>
             <div className="space-y-2">
-              {pathway.government_levers?.map((lever: string) => <p key={lever} className="text-sm bg-slate-50 border border-slate-100 rounded-lg p-3">{lever}</p>)}
+              {pathway.government_levers?.length ? pathway.government_levers.map((lever: string) => <p key={lever} className="text-sm bg-slate-50 border border-slate-100 rounded-lg p-3">{lever}</p>) : <p className="text-sm text-slate-400">No levers added yet.</p>}
             </div>
           </div>
           <div className="bg-white border border-slate-200 rounded-lg p-5">
             <h2 className="font-semibold text-slate-900 mb-3">Linked solutions</h2>
             {(linkedSolutions.length ? linkedSolutions : demoSolutions.slice(0, 1)).map((solution) => (
-              <Link key={solution.id} href={`/solutions/${solution.id}`} className="block text-sm text-brand-700 hover:underline mb-2">{solution.name}</Link>
+              <Link key={solution.id} href={`/solutions/${solution.id}`} className="block text-sm text-brand-700 hover:underline mb-2">{(solution as any).name ?? (solution as any).title ?? 'Untitled solution'}</Link>
             ))}
           </div>
           <div className="bg-white border border-slate-200 rounded-lg p-5">

@@ -25,7 +25,7 @@ export default async function BookmarksPage() {
         ? supabase.from('playbooks').select('id, title, summary, status').in('id', playbookIds)
         : Promise.resolve({ data: [] }),
       solutionIds.length
-        ? supabase.from('solutions').select('id, name, description, status').in('id', solutionIds)
+        ? supabase.from('solutions').select('id, title, summary, description, status').in('id', solutionIds)
         : Promise.resolve({ data: [] }),
       learningIds.length
         ? supabase.from('learning_resources').select('id, title, summary, status').in('id', learningIds)
@@ -78,8 +78,8 @@ export default async function BookmarksPage() {
               <Link key={s.id} href={`/solutions/${s.id}`} className="block rounded-lg border border-gray-200 p-4 hover:border-green-400 hover:shadow-sm transition">
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="font-medium text-gray-900">{s.name}</p>
-                    {s.description && <p className="text-sm text-gray-500 mt-1 line-clamp-2">{s.description}</p>}
+                    <p className="font-medium text-gray-900">{(s as any).name ?? s.title ?? 'Untitled solution'}</p>
+                    {((s as any).description ?? s.summary) && <p className="text-sm text-gray-500 mt-1 line-clamp-2">{(s as any).description ?? s.summary}</p>}
                   </div>
                   <span className="ml-4 text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 shrink-0">{s.status}</span>
                 </div>

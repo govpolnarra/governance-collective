@@ -40,7 +40,7 @@ export default async function DiscoverPage({
 
   const [playbooksRes, solutionsRes, requestsRes, peopleRes, districtsRes, labsRes, learningRes] = await Promise.all([
     supabase.from('playbooks').select('id,title,summary,problem_statement,sector,state,district,tags,evidence_label,replication_readiness').eq('status', 'published').limit(25),
-    supabase.from('solutions').select('id,name,description,problem_addressed,sector,tags,evidence_level,geographies_of_validation').eq('status', 'published').limit(25),
+    supabase.from('solutions').select('id,title,summary,description,problem_addressed,sector,tags,evidence_level,geographies_of_validation').eq('status', 'published').limit(25),
     supabase.from('requests').select('id,title,description,problem_context,sector,state,district,tags,status').eq('status', 'open').limit(25),
     supabase.from('profiles').select('id,full_name,bio,organisation,role,sectors,geographies,expertise,availability').eq('is_approved', true).limit(25),
     supabase.from('districts').select('id,state,district_name,summary,priority_themes').limit(25),
@@ -64,8 +64,8 @@ export default async function DiscoverPage({
     ...((solutionsRes.data?.length ? solutionsRes.data : demoSolutions) as any[]).map((s) => ({
       id: s.id,
       type: 'Solution',
-      title: s.name,
-      summary: s.description ?? s.problem_addressed ?? '',
+      title: s.name ?? s.title ?? 'Untitled solution',
+      summary: s.description ?? s.summary ?? s.problem_addressed ?? '',
       href: `/solutions/${s.id}`,
       sector: s.sector,
       geography: s.geographies_of_validation?.join(', '),

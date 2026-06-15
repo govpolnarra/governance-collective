@@ -33,8 +33,8 @@ export default async function CurationQueuePage() {
         const { data } = await supabase.from('playbooks').select('title').eq('id', item.content_id).single()
         if (data) { title = data.title; contentHref = `/playbooks/${item.content_id}` }
       } else if (item.content_type === 'solution') {
-        const { data } = await supabase.from('solutions').select('name').eq('id', item.content_id).single()
-        if (data) { title = data.name; contentHref = `/solutions/${item.content_id}` }
+        const { data } = await supabase.from('solutions').select('title').eq('id', item.content_id).single()
+        if (data) { title = data.title; contentHref = `/solutions/${item.content_id}` }
       } else if (item.content_type === 'learning_resource') {
         const { data } = await supabase.from('learning_resources').select('title').eq('id', item.content_id).single()
         if (data) { title = data.title; contentHref = `/learning/${item.content_id}` }

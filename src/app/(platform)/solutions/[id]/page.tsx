@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import BookmarkButton from '@/components/BookmarkButton'
+import { demoSolutions } from '@/lib/data/demo'
 
 export default async function SolutionDetailPage({
   params,
@@ -11,15 +12,18 @@ export default async function SolutionDetailPage({
   const { id } = await params
   const supabase = await createClient()
 
-  const { data: solution } = await supabase
+  const { data } = await supabase
     .from('solutions')
     .select('*, profiles(full_name, organisation, avatar_url)')
     .eq('id', id)
-    .single()
+    .maybeSingle()
 
+  const solution = data ?? demoSolutions.find((item) => item.id === id)
   if (!solution) notFound()
 
   const profile = (solution as any).profiles
+  const title = (solution as any).name ?? (solution as any).title ?? 'Untitled solution'
+  const description = (solution as any).description ?? (solution as any).summary
 
   // Check if current user has bookmarked this
   const { data: { user } } = await supabase.auth.getUser()
@@ -49,7 +53,7 @@ export default async function SolutionDetailPage({
             </span>
           )}
           <div className="flex items-start justify-between gap-4">
-            <h1 className="text-2xl font-bold text-slate-900">{solution.name}</h1>
+            <h1 className="text-2xl font-bold text-slate-900">{title}</h1>
             {user && (
               <BookmarkButton
                 contentType="solution"
@@ -65,10 +69,10 @@ export default async function SolutionDetailPage({
           )}
         </div>
 
-        {solution.description && (
+        {description && (
           <div>
             <h2 className="text-lg font-semibold text-slate-800 mb-2">Description</h2>
-            <p className="text-slate-600 leading-relaxed">{solution.description}</p>
+            <p className="text-slate-600 leading-relaxed">{description}</p>
           </div>
         )}
 

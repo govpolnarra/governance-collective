@@ -1,21 +1,23 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import SearchFilter from '@/components/SearchFilter'
+import { demoSolutions } from '@/lib/data/demo'
 
 export default async function SolutionsPage() {
   const supabase = await createClient()
-  const { data: solutions } = await supabase
+  const { data: solutions, error } = await supabase
     .from('solutions')
     .select('*, profiles(full_name, organisation)')
     .eq('status', 'published')
     .order('created_at', { ascending: false })
 
-  const items = (solutions ?? []).map((s: any) => ({
+  const source = solutions?.length ? solutions : error ? demoSolutions : []
+  const items = source.map((s: any) => ({
     id: s.id,
-    title: s.name,
+    title: s.name ?? s.title ?? 'Untitled solution',
     sector: s.sector,
     tags: s.tags,
-    description: s.description,
+    description: s.description ?? s.summary ?? s.problem_addressed,
     author: s.profiles?.full_name ?? 'Unknown',
     organisation: s.profiles?.organisation ?? '',
   }))
@@ -25,10 +27,16 @@ export default async function SolutionsPage() {
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Solutions</h1>
-          <p className="text-slate-500 mt-1">Innovative approaches to governance challenges.</p>
+          <p className="text-slate-500 mt-1">Evidence-labelled solution profiles with adoption conditions and government fit.</p>
         </div>
         <Link href="/solutions/submit" className="btn-primary">+ Submit a Solution</Link>
       </div>
+
+      {error && (
+        <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-lg p-3 mb-4">
+          Could not load live solutions, so demo records are shown. {error.message}
+        </div>
+      )}
 
       {items.length === 0 ? (
         <div className="card p-12 text-center">

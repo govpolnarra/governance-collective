@@ -23,7 +23,7 @@ export default function SearchFilter({ items, sectors = [], renderItem, placehol
   const filtered = useMemo(() => {
     return items.filter(item => {
       const matchesQuery = !query ||
-        item.title.toLowerCase().includes(query.toLowerCase()) ||
+        (item.title ?? '').toLowerCase().includes(query.toLowerCase()) ||
         (item.sector ?? '').toLowerCase().includes(query.toLowerCase()) ||
         (item.tags ?? []).some(t => t.toLowerCase().includes(query.toLowerCase()))
       const matchesSector = !sector || item.sector === sector

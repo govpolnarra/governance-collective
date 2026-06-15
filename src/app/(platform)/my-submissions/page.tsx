@@ -21,7 +21,7 @@ export default async function MySubmissionsPage() {
   const [{ data: playbooks }, { data: solutions }, { data: learning }, { data: requests }] =
     await Promise.all([
       supabase.from('playbooks').select('id, title, status, created_at').eq('author_id', user.id).order('created_at', { ascending: false }),
-      supabase.from('solutions').select('id, name, status, created_at').eq('author_id', user.id).order('created_at', { ascending: false }),
+      supabase.from('solutions').select('id, title, status, created_at').eq('author_id', user.id).order('created_at', { ascending: false }),
       supabase.from('learning_resources').select('id, title, status, created_at').eq('author_id', user.id).order('created_at', { ascending: false }),
       supabase.from('requests').select('id, title, status, created_at').eq('author_id', user.id).order('created_at', { ascending: false }),
     ])
@@ -56,7 +56,7 @@ export default async function MySubmissionsPage() {
       )}
 
       {(solutions?.length ?? 0) > 0 && (
-        <Section title="✅ Solutions" items={solutions!.map(s => ({ id: s.id, title: s.name, status: s.status, created_at: s.created_at, href: `/solutions/${s.id}` }))} />
+        <Section title="✅ Solutions" items={solutions!.map(s => ({ id: s.id, title: (s as any).name ?? s.title ?? 'Untitled solution', status: s.status, created_at: s.created_at, href: `/solutions/${s.id}` }))} />
       )}
 
       {(learning?.length ?? 0) > 0 && (
