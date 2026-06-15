@@ -61,3 +61,9 @@ Supabase Auth still owns magic-link sessions. Resend is used for product emails 
 - `RESEND_REPLY_TO`
 
 To send Supabase magic links through Resend as well, configure Supabase Auth SMTP with Resend's SMTP settings in the Supabase dashboard.
+
+For branded sending, verify `govinit.online` in Resend and set:
+
+```bash
+RESEND_FROM_EMAIL="Governance Collective <no-reply@govinit.online>"
+```

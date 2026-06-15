@@ -61,14 +61,14 @@ export default function LoginPage() {
     }
     setLoading(true);
     setError('');
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: `${SITE_URL}/auth/callback`,
-      },
+    const response = await fetch('/api/auth/magic-link', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
     });
-    if (error) {
-      setError(friendlyAuthError(error.message));
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      setError(friendlyAuthError(payload.error ?? 'Could not send magic link'));
     } else {
       const nextAllowedAt = Date.now() + MAGIC_LINK_COOLDOWN_MS;
       window.localStorage.setItem(`gc_magic_link_until:${email.toLowerCase()}`, String(nextAllowedAt));
