@@ -12,6 +12,16 @@ do $$ begin
   create type public.gc_visibility as enum ('public', 'registered', 'trusted', 'internal');
 exception when duplicate_object then null; end $$;
 
+alter table if exists public.profiles
+  add column if not exists access_tier public.gc_access_tier default 'registered',
+  add column if not exists email text,
+  add column if not exists phone text,
+  add column if not exists geographies text[],
+  add column if not exists sectors text[],
+  add column if not exists methods text[],
+  add column if not exists availability text check (availability in ('open', 'on_request', 'not_available')),
+  add column if not exists recognition_level text;
+
 create or replace function public.current_profile_role()
 returns text
 language sql
@@ -43,16 +53,6 @@ set search_path = public
 as $$
   select coalesce(is_approved, false) from public.profiles where id = auth.uid()
 $$;
-
-alter table if exists public.profiles
-  add column if not exists access_tier public.gc_access_tier default 'registered',
-  add column if not exists email text,
-  add column if not exists phone text,
-  add column if not exists geographies text[],
-  add column if not exists sectors text[],
-  add column if not exists methods text[],
-  add column if not exists availability text check (availability in ('open', 'on_request', 'not_available')),
-  add column if not exists recognition_level text;
 
 create table if not exists public.organisations (
   id uuid primary key default gen_random_uuid(),
