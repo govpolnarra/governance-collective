@@ -30,7 +30,7 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Public routes — always allow
-  const publicRoutes = ['/', '/login', '/auth/callback'];
+  const publicRoutes = ['/', '/login', '/auth/callback', '/api/auth/magic-link'];
   if (publicRoutes.includes(pathname)) return supabaseResponse;
 
   // Unauthenticated → redirect to login
