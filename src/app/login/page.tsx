@@ -66,9 +66,16 @@ export default function LoginPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email }),
     });
-    const payload = await response.json().catch(() => ({}));
+    const responseText = await response.text();
+    let payload: { error?: string } = {};
+    try {
+      payload = responseText ? JSON.parse(responseText) : {};
+    } catch {
+      payload = { error: responseText };
+    }
     if (!response.ok) {
-      setError(friendlyAuthError(payload.error ?? 'Could not send magic link'));
+      const fallback = `Could not send magic link. Server returned ${response.status}.`;
+      setError(friendlyAuthError(payload.error || fallback));
     } else {
       const nextAllowedAt = Date.now() + MAGIC_LINK_COOLDOWN_MS;
       window.localStorage.setItem(`gc_magic_link_until:${email.toLowerCase()}`, String(nextAllowedAt));

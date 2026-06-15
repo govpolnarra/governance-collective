@@ -2,6 +2,13 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { sendMagicLinkEmail } from '@/lib/email/resend'
 
+type EmailResult = {
+  error?: {
+    message?: string
+    name?: string
+  } | null
+}
+
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null)
   const email = String(body?.email ?? '').trim().toLowerCase()
@@ -30,7 +37,13 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    await sendMagicLinkEmail({ email, actionLink })
+    const sendResult = await sendMagicLinkEmail({ email, actionLink }) as EmailResult
+    if (sendResult.error) {
+      return NextResponse.json(
+        { error: sendResult.error.message || sendResult.error.name || 'Could not send magic link email' },
+        { status: 502 }
+      )
+    }
   } catch (sendError) {
     const message = sendError instanceof Error ? sendError.message : 'Could not send magic link email'
     return NextResponse.json({ error: message }, { status: 500 })
