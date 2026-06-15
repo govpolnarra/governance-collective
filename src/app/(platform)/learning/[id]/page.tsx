@@ -15,14 +15,15 @@ const RESOURCE_TYPE_LABELS: Record<string, string> = {
 export default async function LearningDetailPage({
   params,
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }) {
+  const { id } = await params
   const supabase = await createClient()
 
   const { data: resource } = await supabase
     .from('learning_resources')
     .select('*, profiles(full_name, organisation, avatar_url)')
-    .eq('id', params.id)
+    .eq('id', id)
     .single()
 
   if (!resource) notFound()
@@ -38,7 +39,7 @@ export default async function LearningDetailPage({
       .select('id')
       .eq('user_id', user.id)
       .eq('content_type', 'learning_resource')
-      .eq('content_id', params.id)
+      .eq('content_id', id)
       .maybeSingle()
     isBookmarked = !!bookmark
   }
@@ -61,7 +62,7 @@ export default async function LearningDetailPage({
             {user && (
               <BookmarkButton
                 contentType="learning_resource"
-                contentId={params.id}
+                contentId={id}
                 initialBookmarked={isBookmarked}
               />
             )}

@@ -13,15 +13,16 @@ const STATUS_COLORS: Record<string, string> = {
 export default async function RequestDetailPage({
   params,
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }) {
+  const { id } = await params
   const supabase = await createClient()
 
   const [{ data: request }, { data: { user } }] = await Promise.all([
     supabase
       .from('requests')
       .select('*, profiles(full_name, organisation, avatar_url)')
-      .eq('id', params.id)
+      .eq('id', id)
       .single(),
     supabase.auth.getUser(),
   ])
@@ -38,7 +39,7 @@ export default async function RequestDetailPage({
       .select('id')
       .eq('user_id', user.id)
       .eq('content_type', 'request')
-      .eq('content_id', params.id)
+      .eq('content_id', id)
       .maybeSingle()
     isBookmarked = !!bookmark
   }
@@ -66,7 +67,7 @@ export default async function RequestDetailPage({
             {user && (
               <BookmarkButton
                 contentType="request"
-                contentId={params.id}
+                contentId={id}
                 initialBookmarked={isBookmarked}
               />
             )}

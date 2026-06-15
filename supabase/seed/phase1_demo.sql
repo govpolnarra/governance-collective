@@ -1,0 +1,29 @@
+insert into public.districts (id, state, district_name, district_type, summary, priority_themes, active_problem_count, canvas_visibility)
+values
+  ('10000000-0000-4000-8000-000000000101', 'Bihar', 'Sheohar', 'district', 'Small district canvas tracking anganwadi functionality, nutrition visibility, and monthly review discipline.', array['Nutrition', 'Anganwadi functionality', 'Frontline reviews'], 3, 'trusted'),
+  ('10000000-0000-4000-8000-000000000102', 'Bihar', 'Kishanganj', 'district', 'Education-focused canvas for girls Class 6-8 retention and block-level early warning protocols.', array['Girls retention', 'Middle school transition', 'Community outreach'], 2, 'trusted'),
+  ('10000000-0000-4000-8000-000000000103', 'Bihar', 'Gaya', 'district', 'Convergence canvas focused on Musahari Tola services and last-mile scheme access.', array['Convergence', 'Entitlements', 'Tola planning'], 4, 'trusted')
+on conflict (id) do update set summary = excluded.summary, priority_themes = excluded.priority_themes, active_problem_count = excluded.active_problem_count;
+
+insert into public.district_canvas_entries (id, district_id, entry_type, title, description, status, visibility)
+values
+  ('11000000-0000-4000-8000-000000000101', '10000000-0000-4000-8000-000000000101', 'active_problem', 'Anganwadi functionality is visible only during monthly review', 'Supervisory visits exist, but evidence is not comparable across centres and blocks.', 'active', 'trusted'),
+  ('11000000-0000-4000-8000-000000000102', '10000000-0000-4000-8000-000000000101', 'decision', 'Pilot low-burden photo verification in two blocks', 'CDPO visit protocol will capture open status, nutrition day evidence, and stock visibility.', 'active', 'trusted'),
+  ('11000000-0000-4000-8000-000000000103', '10000000-0000-4000-8000-000000000102', 'bottleneck', 'Absent girls are identified after the return window has passed', 'Schools need a three-day absence trigger and a clear follow-up owner.', 'watch', 'trusted')
+on conflict (id) do update set title = excluded.title, description = excluded.description, status = excluded.status;
+
+insert into public.action_labs (id, title, district_id, state_priority_theme, district_specific_track, problem_statement, root_cause_summary, primary_indicator, secondary_indicators, stage, status, government_counterpart, visibility, start_date, next_review_date)
+values
+  ('20000000-0000-4000-8000-000000000101', 'Anganwadi Functionality and Nutrition Visibility - Sheohar', '10000000-0000-4000-8000-000000000101', 'Nutrition', true, 'The district lacks a practical way to identify which anganwadi centres are functionally active before the monthly review.', 'Visit evidence is inconsistent, block formats vary, and review meetings focus on reported completion rather than observed functionality.', 'Share of centres with verified functional opening during sampled CDPO visits', array['Nutrition day evidence captured', 'Stock-out flags resolved within 10 days'], 'design', 'active', 'DPO ICDS office', 'trusted', '2026-05-01', '2026-06-28'),
+  ('20000000-0000-4000-8000-000000000102', 'Girls'' Class 6-8 Retention - Kishanganj', '10000000-0000-4000-8000-000000000102', 'Education', true, 'Girls who miss three or more school days are often followed up after the dropout risk has hardened.', 'Attendance review is retrospective, community follow-up ownership is unclear, and school transition risk is not surfaced early.', 'Three-day absence cases followed up within one week', array['Re-enrolment after follow-up', 'Parent meeting completion'], 'diagnose', 'active', 'Block Education Officer', 'trusted', '2026-05-15', '2026-07-05')
+on conflict (id) do update set title = excluded.title, problem_statement = excluded.problem_statement, stage = excluded.stage, status = excluded.status;
+
+insert into public.learning_logs (id, action_lab_id, log_type, date, location, what_was_tried, what_was_observed, what_was_learned, what_changes_next, blockers, support_needed, visibility)
+values
+  ('21000000-0000-4000-8000-000000000101', '20000000-0000-4000-8000-000000000101', 'weekly_log', '2026-06-12', 'Sheohar Sadar', 'Tested a one-page CDPO visit format with photo evidence and stock status.', 'Supervisors completed the format quickly, but photo labels need a centre code convention.', 'The format works only if it feeds the monthly review directly.', 'Add centre code prompts and create a block summary view.', 'Patchy mobile network in two centres.', 'Help designing a no-network backup capture format.', 'internal')
+on conflict (id) do update set what_was_learned = excluded.what_was_learned;
+
+insert into public.solution_pathways (id, title, problem_statement, district_id, action_lab_id, architecture_summary, government_levers, actor_changes, sequence, measurement_plan, risks, status, visibility)
+values
+  ('70000000-0000-4000-8000-000000000101', 'Sheohar anganwadi functionality pathway', 'The district lacks a practical way to identify which anganwadi centres are functionally active before the monthly review.', '10000000-0000-4000-8000-000000000101', '20000000-0000-4000-8000-000000000101', 'Combine a district-owned review protocol, supervisor support, and targeted partner help to make centre functionality visible before monthly reviews.', array['Monthly DPO review', 'CDPO supervisory visits', 'Block-level escalation'], 'Supervisors capture fewer but higher-trust evidence points; DPO reviews patterns rather than individual blame.', 'Test in two blocks, standardise centre codes, review in monthly meeting, then scale to all blocks.', 'Track verified openings, stock-out closure time, and nutrition day evidence by block.', 'Over-reporting, weak mobile network, or review meetings becoming punitive.', 'active', 'trusted')
+on conflict (id) do update set architecture_summary = excluded.architecture_summary;

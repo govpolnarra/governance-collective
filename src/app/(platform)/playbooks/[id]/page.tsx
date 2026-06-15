@@ -6,15 +6,16 @@ import BookmarkButton from '@/components/BookmarkButton'
 export default async function PlaybookDetailPage({
   params,
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }) {
+  const { id } = await params
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   const { data: playbook } = await supabase
     .from('playbooks')
     .select('*, profiles(full_name, organisation, avatar_url)')
-    .eq('id', params.id)
+    .eq('id', id)
     .single()
 
   if (!playbook) notFound()
@@ -28,7 +29,7 @@ export default async function PlaybookDetailPage({
       .from('bookmarks')
       .select('id')
       .eq('user_id', user.id)
-      .eq('content_id', params.id)
+      .eq('content_id', id)
       .eq('content_type', 'playbook')
       .maybeSingle()
     isBookmarked = !!bookmark
@@ -55,7 +56,7 @@ export default async function PlaybookDetailPage({
             </div>
             {user && (
               <BookmarkButton
-                contentId={params.id}
+                contentId={id}
                 contentType="playbook"
                 initialBookmarked={isBookmarked}
               />

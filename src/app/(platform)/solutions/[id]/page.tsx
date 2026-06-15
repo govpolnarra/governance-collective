@@ -6,14 +6,15 @@ import BookmarkButton from '@/components/BookmarkButton'
 export default async function SolutionDetailPage({
   params,
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }) {
+  const { id } = await params
   const supabase = await createClient()
 
   const { data: solution } = await supabase
     .from('solutions')
     .select('*, profiles(full_name, organisation, avatar_url)')
-    .eq('id', params.id)
+    .eq('id', id)
     .single()
 
   if (!solution) notFound()
@@ -29,7 +30,7 @@ export default async function SolutionDetailPage({
       .select('id')
       .eq('user_id', user.id)
       .eq('content_type', 'solution')
-      .eq('content_id', params.id)
+      .eq('content_id', id)
       .maybeSingle()
     isBookmarked = !!bookmark
   }
@@ -52,7 +53,7 @@ export default async function SolutionDetailPage({
             {user && (
               <BookmarkButton
                 contentType="solution"
-                contentId={params.id}
+                contentId={id}
                 initialBookmarked={isBookmarked}
               />
             )}
