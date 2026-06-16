@@ -2,6 +2,30 @@ import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
+async function redirectAfterAuth({
+  origin,
+  next,
+}: {
+  origin: string
+  next: string
+}) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.redirect(`${origin}/login?error=auth`);
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('password_set')
+    .eq('id', user.id)
+    .maybeSingle();
+
+  if (profile?.password_set !== true) {
+    return NextResponse.redirect(`${origin}/set-password`);
+  }
+
+  return NextResponse.redirect(`${origin}${next}`);
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
@@ -18,7 +42,7 @@ export async function GET(request: NextRequest) {
       token_hash,
     });
     if (!error) {
-      return NextResponse.redirect(`${origin}${next}`);
+      return redirectAfterAuth({ origin, next });
     }
     return NextResponse.redirect(`${origin}/login?error=auth&message=${error.message}`);
   }
@@ -27,7 +51,7 @@ export async function GET(request: NextRequest) {
   if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      return NextResponse.redirect(`${origin}${next}`);
+      return redirectAfterAuth({ origin, next });
     }
     return NextResponse.redirect(`${origin}/login?error=auth`);
   }

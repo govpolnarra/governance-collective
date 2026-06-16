@@ -25,6 +25,12 @@ const tabs = [
   { href: '/learning?type=clinic_recording', label: 'Clinics', activeWhen: 'clinic_recording' },
 ]
 
+function normalizeTags(tags: unknown): string[] {
+  if (Array.isArray(tags)) return tags.filter((tag): tag is string => typeof tag === 'string')
+  if (typeof tags === 'string') return [tags]
+  return []
+}
+
 export default async function LearningPage({
   searchParams,
 }: {
@@ -46,7 +52,7 @@ export default async function LearningPage({
     id: r.id,
     title: r.title,
     sector: r.sector,
-    tags: r.tags,
+    tags: normalizeTags(r.tags),
     summary: r.summary,
     resource_type: r.resource_type,
     resource_url: r.resource_url,

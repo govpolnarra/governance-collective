@@ -12,6 +12,12 @@ const RESOURCE_TYPE_LABELS: Record<string, string> = {
   tool: '🛠️ Tool',
 }
 
+function normalizeTags(tags: unknown): string[] {
+  if (Array.isArray(tags)) return tags.filter((tag): tag is string => typeof tag === 'string')
+  if (typeof tags === 'string') return [tags]
+  return []
+}
+
 export default async function LearningDetailPage({
   params,
 }: {
@@ -29,6 +35,7 @@ export default async function LearningDetailPage({
   if (!resource) notFound()
 
   const profile = (resource as any).profiles
+  const tags = normalizeTags((resource as any).tags)
 
   // Check if current user has bookmarked this
   const { data: { user } } = await supabase.auth.getUser()
@@ -95,11 +102,11 @@ export default async function LearningDetailPage({
           </div>
         )}
 
-        {resource.tags && resource.tags.length > 0 && (
+        {tags.length > 0 && (
           <div>
             <h2 className="text-lg font-semibold text-slate-800 mb-2">Tags</h2>
             <div className="flex flex-wrap gap-2">
-              {resource.tags.map((tag: string) => (
+              {tags.map((tag) => (
                 <span key={tag} className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded">{tag}</span>
               ))}
             </div>

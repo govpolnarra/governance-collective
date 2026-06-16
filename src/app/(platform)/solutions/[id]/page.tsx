@@ -4,6 +4,12 @@ import Link from 'next/link'
 import BookmarkButton from '@/components/BookmarkButton'
 import { demoSolutions } from '@/lib/data/demo'
 
+function normalizeTags(tags: unknown): string[] {
+  if (Array.isArray(tags)) return tags.filter((tag): tag is string => typeof tag === 'string')
+  if (typeof tags === 'string') return [tags]
+  return []
+}
+
 export default async function SolutionDetailPage({
   params,
 }: {
@@ -24,6 +30,7 @@ export default async function SolutionDetailPage({
   const profile = (solution as any).profiles
   const title = (solution as any).name ?? (solution as any).title ?? 'Untitled solution'
   const description = (solution as any).description ?? (solution as any).summary
+  const tags = normalizeTags((solution as any).tags)
 
   // Check if current user has bookmarked this
   const { data: { user } } = await supabase.auth.getUser()
@@ -97,11 +104,11 @@ export default async function SolutionDetailPage({
           </div>
         )}
 
-        {solution.tags && solution.tags.length > 0 && (
+        {tags.length > 0 && (
           <div>
             <h2 className="text-lg font-semibold text-slate-800 mb-2">Tags</h2>
             <div className="flex flex-wrap gap-2">
-              {solution.tags.map((tag: string) => (
+              {tags.map((tag) => (
                 <span key={tag} className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded">{tag}</span>
               ))}
             </div>

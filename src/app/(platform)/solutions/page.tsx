@@ -3,6 +3,12 @@ import Link from 'next/link'
 import SearchFilter from '@/components/SearchFilter'
 import { demoSolutions } from '@/lib/data/demo'
 
+function normalizeTags(tags: unknown): string[] {
+  if (Array.isArray(tags)) return tags.filter((tag): tag is string => typeof tag === 'string')
+  if (typeof tags === 'string') return [tags]
+  return []
+}
+
 export default async function SolutionsPage() {
   const supabase = await createClient()
   const { data: solutions, error } = await supabase
@@ -16,7 +22,7 @@ export default async function SolutionsPage() {
     id: s.id,
     title: s.name ?? s.title ?? 'Untitled solution',
     sector: s.sector,
-    tags: s.tags,
+    tags: normalizeTags(s.tags),
     description: s.description ?? s.summary ?? s.problem_addressed,
     author: s.profiles?.full_name ?? 'Unknown',
     organisation: s.profiles?.organisation ?? '',

@@ -21,11 +21,19 @@ export default function SearchFilter({ items, sectors = [], renderItem, placehol
   const [sector, setSector] = useState('')
 
   const filtered = useMemo(() => {
+    const normalizedQuery = query.toLowerCase()
     return items.filter(item => {
+      const title = typeof item.title === 'string' ? item.title : ''
+      const itemSector = typeof item.sector === 'string' ? item.sector : ''
+      const tags = Array.isArray(item.tags)
+        ? item.tags.filter((tag): tag is string => typeof tag === 'string')
+        : typeof item.tags === 'string'
+          ? [item.tags]
+          : []
       const matchesQuery = !query ||
-        (item.title ?? '').toLowerCase().includes(query.toLowerCase()) ||
-        (item.sector ?? '').toLowerCase().includes(query.toLowerCase()) ||
-        (item.tags ?? []).some(t => t.toLowerCase().includes(query.toLowerCase()))
+        title.toLowerCase().includes(normalizedQuery) ||
+        itemSector.toLowerCase().includes(normalizedQuery) ||
+        tags.some(t => t.toLowerCase().includes(normalizedQuery))
       const matchesSector = !sector || item.sector === sector
       return matchesQuery && matchesSector
     })

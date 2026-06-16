@@ -41,8 +41,11 @@ export default function SetPasswordPage() {
 
     const { error: profileError } = await supabase
       .from('profiles')
-      .update({ password_set: true })
-      .eq('id', user.id)
+      .upsert({
+        id: user.id,
+        email: user.email ?? null,
+        password_set: true,
+      }, { onConflict: 'id' })
 
     if (profileError) {
       setError(profileError.message)

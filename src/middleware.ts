@@ -65,7 +65,7 @@ export async function middleware(request: NextRequest) {
 
   if (
     profile?.is_approved !== false &&
-    profile?.password_set === false &&
+    profile?.password_set !== true &&
     pathname !== '/set-password'
   ) {
     const url = request.nextUrl.clone();
