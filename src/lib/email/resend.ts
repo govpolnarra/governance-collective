@@ -1,6 +1,7 @@
 import { Resend } from 'resend'
 
-const fromEmail = process.env.RESEND_FROM_EMAIL || 'Governance Collective <onboarding@resend.dev>'
+const defaultFromEmail = 'Governance Collective <no-reply@govinit.online>'
+const fromEmail = process.env.RESEND_FROM_EMAIL?.trim() || defaultFromEmail
 const replyTo = process.env.RESEND_REPLY_TO
 
 function escapeHtml(value: string) {
