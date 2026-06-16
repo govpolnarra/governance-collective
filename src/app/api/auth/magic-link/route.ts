@@ -9,6 +9,11 @@ type EmailResult = {
   } | null
 }
 
+type LinkProperties = {
+  hashed_token?: string
+  verification_type?: string
+}
+
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null)
   const email = String(body?.email ?? '').trim().toLowerCase()
@@ -17,7 +22,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'A valid email is required' }, { status: 400 })
   }
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin).replace(/\/$/, '')
   const redirectTo = `${siteUrl}/auth/callback`
   const supabase = await createAdminClient()
 
@@ -31,10 +36,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  const actionLink = data.properties?.action_link
-  if (!actionLink) {
+  const properties = data.properties as LinkProperties | undefined
+  const tokenHash = properties?.hashed_token
+  const verificationType = properties?.verification_type || 'email'
+  if (!tokenHash) {
     return NextResponse.json({ error: 'Could not generate sign-in link' }, { status: 500 })
   }
+  const actionLink = `${redirectTo}?token_hash=${encodeURIComponent(tokenHash)}&type=${encodeURIComponent(verificationType)}`
 
   try {
     const sendResult = await sendMagicLinkEmail({ email, actionLink }) as EmailResult

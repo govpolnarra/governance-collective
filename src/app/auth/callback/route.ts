@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
   // Handle magic link / OTP token_hash flow
   if (token_hash && type) {
     const { error } = await supabase.auth.verifyOtp({
-      type: type as 'email' | 'recovery' | 'invite' | 'email_change',
+      type: type as 'signup' | 'invite' | 'magiclink' | 'recovery' | 'email_change' | 'email',
       token_hash,
     });
     if (!error) {
