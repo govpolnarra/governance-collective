@@ -26,7 +26,7 @@ export default function SubmitSolutionPage() {
     if (!user) { router.push('/login'); return }
 
     const tagsArray = form.tags.split(',').map(t => t.trim()).filter(Boolean)
-    const { error: insertError } = await supabase.from('solutions').insert({
+    const { data: solution, error: insertError } = await supabase.from('solutions').insert({
       title: form.title,
       summary: form.summary,
       sector: form.sector || null,
@@ -35,10 +35,19 @@ export default function SubmitSolutionPage() {
       outcomes: form.outcomes || null,
       tags: tagsArray,
       author_id: user.id,
-      status: 'draft'
-    })
+      status: 'pending_review'
+    }).select('id').single()
 
     if (insertError) { setError(insertError.message); setLoading(false); return }
+    if (solution?.id) {
+      const { error: queueError } = await supabase.from('curation_queue').insert({
+        content_id: solution.id,
+        content_type: 'solution',
+        submitted_by: user.id,
+        status: 'pending_review',
+      })
+      if (queueError) { setError(queueError.message); setLoading(false); return }
+    }
     router.push('/solutions')
   }
 

@@ -20,8 +20,15 @@ export default async function CurationQueuePage() {
   const { data: queue } = await supabase
     .from('curation_queue')
     .select('*, profiles!curation_queue_submitted_by_fkey(full_name, organisation)')
-    .eq('status', 'pending_review')
-    .order('created_at', { ascending: true })
+    .in('status', ['pending_review', 'revision_requested', 'published', 'rejected'])
+    .order('updated_at', { ascending: false })
+    .limit(100)
+
+  const { data: events } = await supabase
+    .from('curation_events')
+    .select('*, profiles!curation_events_actor_id_fkey(full_name)')
+    .order('created_at', { ascending: false })
+    .limit(50)
 
   // Enrich each queue item with a human-readable title by fetching from the source table
   const enriched = await Promise.all(
@@ -47,5 +54,5 @@ export default async function CurationQueuePage() {
     })
   )
 
-  return <CurationClient queue={enriched} userRole={profile.role} />
+  return <CurationClient queue={enriched} events={(events ?? []) as any[]} userRole={profile.role} />
 }

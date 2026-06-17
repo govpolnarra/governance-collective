@@ -22,17 +22,26 @@ export default function SubmitLearningPage() {
     if (!user) { router.push('/login'); return }
 
     const tagsArray = form.tags.split(',').map(t => t.trim()).filter(Boolean)
-    const { error: insertError } = await supabase.from('learning_resources').insert({
+    const { data: resource, error: insertError } = await supabase.from('learning_resources').insert({
       title: form.title,
       summary: form.summary,
       resource_url: form.resource_url || null,
       resource_type: form.resource_type,
       tags: tagsArray,
       author_id: user.id,
-      status: 'draft'
-    })
+      status: 'pending_review'
+    }).select('id').single()
 
     if (insertError) { setError(insertError.message); setLoading(false); return }
+    if (resource?.id) {
+      const { error: queueError } = await supabase.from('curation_queue').insert({
+        content_id: resource.id,
+        content_type: 'learning_resource',
+        submitted_by: user.id,
+        status: 'pending_review',
+      })
+      if (queueError) { setError(queueError.message); setLoading(false); return }
+    }
     router.push('/learning')
   }
 

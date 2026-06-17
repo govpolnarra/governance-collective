@@ -32,7 +32,7 @@ export default function SubmitPlaybookPage() {
     if (!user) { router.push('/login'); return }
 
     const tagsArray = form.tags.split(',').map(t => t.trim()).filter(Boolean)
-    const { error: insertError } = await supabase.from('playbooks').insert({
+    const { data: playbook, error: insertError } = await supabase.from('playbooks').insert({
       title: form.title,
       summary: form.summary,
       sector: form.sector || null,
@@ -42,10 +42,19 @@ export default function SubmitPlaybookPage() {
       outcomes: form.outcomes || null,
       tags: tagsArray,
       author_id: user.id,
-      status: 'draft'
-    })
+      status: 'pending_review'
+    }).select('id').single()
 
     if (insertError) { setError(insertError.message); setLoading(false); return }
+    if (playbook?.id) {
+      const { error: queueError } = await supabase.from('curation_queue').insert({
+        content_id: playbook.id,
+        content_type: 'playbook',
+        submitted_by: user.id,
+        status: 'pending_review',
+      })
+      if (queueError) { setError(queueError.message); setLoading(false); return }
+    }
     router.push('/playbooks')
   }
 

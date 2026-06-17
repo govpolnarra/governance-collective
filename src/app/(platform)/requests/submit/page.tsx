@@ -22,15 +22,24 @@ export default function SubmitRequestPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/login'); return }
 
-    const { error: insertError } = await supabase.from('requests').insert({
+    const { data: request, error: insertError } = await supabase.from('requests').insert({
       title: form.title,
       description: form.description,
       sector: form.sector || null,
       author_id: user.id,
       status: 'open'
-    })
+    }).select('id').single()
 
     if (insertError) { setError(insertError.message); setLoading(false); return }
+    if (request?.id) {
+      const { error: queueError } = await supabase.from('curation_queue').insert({
+        content_id: request.id,
+        content_type: 'request',
+        submitted_by: user.id,
+        status: 'pending_review',
+      })
+      if (queueError) { setError(queueError.message); setLoading(false); return }
+    }
     router.push('/requests')
   }
 
