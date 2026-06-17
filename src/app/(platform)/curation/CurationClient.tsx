@@ -39,6 +39,7 @@ const CONTENT_TYPE_LABELS: Record<string, string> = {
   solution: '💡 Solution',
   learning_resource: '📚 Learning Resource',
   request: '❓ Request',
+  solution_pathway: 'Solution Pathway',
 }
 
 export default function CurationClient({ queue, events, userRole }: Props) {

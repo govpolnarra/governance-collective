@@ -183,6 +183,8 @@ export interface ActionLab {
   lead_fellow_ids: string[] | null
   solution_anchor_id: string | null
   government_counterpart: string | null
+  review_owner_id?: string | null
+  review_notes?: string | null
   visibility: Visibility
   start_date: string | null
   next_review_date: string | null
@@ -204,6 +206,10 @@ export interface LearningLog {
   what_changes_next: string | null
   blockers: string | null
   support_needed: string | null
+  decision_notes?: string | null
+  review_notes?: string | null
+  converted_to_type?: string | null
+  converted_to_id?: string | null
   visibility: Visibility
   submitted_by: string | null
   created_at: string
@@ -217,13 +223,18 @@ export interface SolutionPathway {
   district_id: string | null
   action_lab_id: string | null
   architecture_summary: string | null
+  root_cause?: string | null
+  actors?: string | null
   government_levers: string[] | null
   solution_ids: string[] | null
   expert_ids: string[] | null
+  possible_solutions?: string | null
   actor_changes: string | null
   sequence: string | null
   measurement_plan: string | null
   risks: string | null
+  adoption_conditions?: string | null
+  curator_note?: string | null
   status: 'draft' | 'under_review' | 'active' | 'archived'
   visibility: Visibility
   created_by: string | null
@@ -252,5 +263,18 @@ export interface Bookmark {
   user_id: string
   content_id: string
   content_type: ContentType
+  created_at: string
+}
+
+export interface Notification {
+  id: string
+  recipient_id: string
+  actor_id: string | null
+  event_type: string
+  title: string
+  body: string | null
+  href: string | null
+  metadata: Record<string, unknown> | null
+  read_at: string | null
   created_at: string
 }

@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import SignOutButton from '@/components/SignOutButton';
-import { BookOpen, ClipboardCheck, Compass, FlaskConical, GraduationCap, Home, Landmark, Lightbulb, Search, Send, Settings, ShieldCheck, Users } from 'lucide-react';
+import { Bell, BookOpen, ClipboardCheck, Compass, FlaskConical, GraduationCap, Home, Landmark, Lightbulb, Search, Send, Settings, ShieldCheck, Users } from 'lucide-react';
 import { isAdminRole, isCuratorRole, roleLabel } from '@/lib/access';
 
 const navItems = [
@@ -16,6 +16,7 @@ const navItems = [
   { href: '/people', label: 'People', icon: Users },
   { href: '/learning', label: 'Learning / GovCap', icon: GraduationCap },
   { href: '/solution-studio', label: 'Solution Studio', icon: Lightbulb },
+  { href: '/notifications', label: 'Notifications', icon: Bell },
   { href: '/my-submissions', label: 'My Submissions', icon: Send },
 ];
 
@@ -36,6 +37,10 @@ export default async function PlatformLayout({
 
   const isCurator = isCuratorRole(profile?.role);
   const isAdmin = isAdminRole(profile?.role);
+  const { count: unreadNotifications } = await supabase
+    .from('notifications')
+    .select('*', { count: 'exact', head: true })
+    .is('read_at', null);
 
   return (
     <div className="min-h-screen bg-slate-50 flex">
@@ -61,6 +66,11 @@ export default async function PlatformLayout({
             >
               <item.icon className="h-4 w-4" aria-hidden="true" />
               <span>{item.label}</span>
+              {item.href === '/notifications' && unreadNotifications ? (
+                <span className="ml-auto min-w-5 rounded-full bg-brand-600 px-1.5 text-center text-[11px] font-semibold text-white">
+                  {unreadNotifications}
+                </span>
+              ) : null}
             </Link>
           ))}
 

@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { demoActionLabs } from '@/lib/data/demo'
+import { isCuratorRole } from '@/lib/access'
+import ReviewReminderButton from './ReviewReminderButton'
 
 export default async function ActionLabsPage() {
   const supabase = await createClient()
@@ -8,14 +10,19 @@ export default async function ActionLabsPage() {
     .from('action_labs')
     .select('*, districts(district_name,state)')
     .order('updated_at', { ascending: false })
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data: profile } = user ? await supabase.from('profiles').select('role').eq('id', user.id).single() : { data: null }
 
   const labs = (data?.length ? data : demoActionLabs) as any[]
 
   return (
     <div className="max-w-6xl mx-auto p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">Action Labs</h1>
-        <p className="text-slate-500 mt-1">Structured workspaces for live field diagnosis, learning logs, review notes, and emerging evidence.</p>
+      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Action Labs</h1>
+          <p className="text-slate-500 mt-1">Structured workspaces for live field diagnosis, learning logs, review notes, and emerging evidence.</p>
+        </div>
+        {isCuratorRole(profile?.role) ? <ReviewReminderButton /> : null}
       </div>
 
       <div className="grid gap-4">
@@ -29,6 +36,10 @@ export default async function ActionLabsPage() {
             <h2 className="font-semibold text-slate-900">{lab.title}</h2>
             <p className="text-sm text-slate-600 mt-1">{lab.problem_statement}</p>
             <p className="text-sm text-slate-500 mt-3"><span className="font-medium">Primary indicator:</span> {lab.primary_indicator}</p>
+            <div className="flex flex-wrap gap-3 text-xs text-slate-500 mt-3">
+              <span>Next review: {lab.next_review_date ?? 'Not set'}</span>
+              <span>Owner: {lab.government_counterpart ?? 'To be assigned'}</span>
+            </div>
           </Link>
         ))}
       </div>

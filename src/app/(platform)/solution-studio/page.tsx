@@ -1,13 +1,20 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { demoSolutionPathways } from '@/lib/data/demo'
+import PathwayBuilder from './PathwayBuilder'
 
 export default async function SolutionStudioPage() {
   const supabase = await createClient()
-  const { data, error } = await supabase
-    .from('solution_pathways')
-    .select('*, districts(district_name,state), action_labs(title)')
-    .order('updated_at', { ascending: false })
+  const [{ data, error }, { data: districts }, { data: actionLabs }, { data: solutions }, { data: experts }] = await Promise.all([
+    supabase
+      .from('solution_pathways')
+      .select('*, districts(district_name,state), action_labs(title)')
+      .order('updated_at', { ascending: false }),
+    supabase.from('districts').select('id,district_name,state').order('district_name'),
+    supabase.from('action_labs').select('id,title').order('updated_at', { ascending: false }),
+    supabase.from('solutions').select('id,name').eq('status', 'published').order('name'),
+    supabase.from('profiles').select('id,full_name,organisation').eq('is_approved', true).order('full_name'),
+  ])
 
   const pathways = (data?.length ? data : demoSolutionPathways) as any[]
 
@@ -18,7 +25,16 @@ export default async function SolutionStudioPage() {
           <h1 className="text-2xl font-bold text-slate-900">Solution Architecture Studio</h1>
           <p className="text-slate-500 mt-1">Build human-readable pathways from a specific governance problem to an implementable response.</p>
         </div>
-        <button className="btn-primary" type="button">New pathway</button>
+        <PathwayBuilder
+          mode="create"
+          districts={(districts ?? []).map((district: any) => ({ id: district.id, label: `${district.district_name}, ${district.state}` }))}
+          actionLabs={(actionLabs ?? []).map((lab: any) => ({ id: lab.id, label: lab.title }))}
+          solutions={(solutions ?? []).map((solution: any) => ({ id: solution.id, label: solution.name ?? 'Untitled solution' }))}
+          experts={(experts ?? []).map((expert: any) => ({
+            id: expert.id,
+            label: expert.organisation ? `${expert.full_name ?? 'Unnamed'} · ${expert.organisation}` : expert.full_name ?? 'Unnamed',
+          }))}
+        />
       </div>
 
       {error && (

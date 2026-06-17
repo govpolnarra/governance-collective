@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { demoActionLabs, demoCanvasEntries, demoDistricts, demoLearningLogs, demoPlaybooks, demoRequests, demoSolutions } from '@/lib/data/demo'
+import DistrictCanvasForm from './DistrictCanvasForm'
 
 export default async function DistrictDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -28,6 +29,7 @@ export default async function DistrictDetailPage({ params }: { params: Promise<{
         <h1 className="text-3xl font-bold text-slate-900">{districtName} District Canvas</h1>
         <p className="text-slate-600 mt-2 max-w-3xl">{district.summary}</p>
       </div>
+      <DistrictCanvasForm districtId={district.id} />
 
       <div className="grid lg:grid-cols-[1.4fr_0.9fr] gap-5">
         <section className="space-y-5">
@@ -51,6 +53,7 @@ export default async function DistrictDetailPage({ params }: { params: Promise<{
             <CanvasList title="Current bottlenecks" items={grouped('bottleneck')} />
             <CanvasList title="Recent decisions" items={grouped('decision')} />
             <CanvasList title="Active problems" items={grouped('active_problem')} />
+            <CanvasList title="Actors and institutions" items={grouped('actor')} />
             <CanvasList title="Continuity notes" items={[...grouped('handover_note'), ...grouped('context_note')]} />
           </div>
         </section>

@@ -2,15 +2,17 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { demoActionLabs, demoLearningLogs, demoProfiles, demoSolutionPathways } from '@/lib/data/demo'
+import { ActionLabWorkspace, ConvertLearningLog } from './ActionLabWorkspace'
 
 const stages = ['diagnose', 'design', 'embed', 'measure', 'replicate']
 
 export default async function ActionLabDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createClient()
-  const [{ data: labData }, { data: logsData }] = await Promise.all([
+  const [{ data: labData }, { data: logsData }, { data: peopleData }] = await Promise.all([
     supabase.from('action_labs').select('*, districts(district_name,state)').eq('id', id).maybeSingle(),
     supabase.from('learning_logs').select('*').eq('action_lab_id', id).order('date', { ascending: false }),
+    supabase.from('profiles').select('id,full_name,organisation').eq('is_approved', true).order('full_name'),
   ])
 
   const lab = labData ?? demoActionLabs.find((item) => item.id === id)
@@ -56,7 +58,16 @@ export default async function ActionLabDetailPage({ params }: { params: Promise<
           <div className="bg-white border border-slate-200 rounded-lg p-5">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
               <h2 className="font-semibold text-slate-900">Learning log feed</h2>
-              <button className="btn-secondary" type="button">Add capture</button>
+              <ActionLabWorkspace
+                labId={lab.id}
+                currentStage={lab.stage}
+                currentStatus={lab.status}
+                reviewOwnerId={lab.review_owner_id}
+                people={(peopleData ?? []).map((person: any) => ({
+                  id: person.id,
+                  label: person.organisation ? `${person.full_name ?? 'Unnamed'} · ${person.organisation}` : person.full_name ?? 'Unnamed',
+                }))}
+              />
             </div>
             {logs.length ? (
               <div className="space-y-4">
@@ -69,7 +80,11 @@ export default async function ActionLabDetailPage({ params }: { params: Promise<
                     </div>
                     <p className="text-sm text-slate-600"><span className="font-medium text-slate-900">Learned:</span> {log.what_was_learned}</p>
                     <p className="text-sm text-slate-600 mt-2"><span className="font-medium text-slate-900">Changes next:</span> {log.what_changes_next}</p>
+                    {log.blockers ? <p className="text-sm text-red-700 mt-2">Blocker: {log.blockers}</p> : null}
+                    {log.decision_notes ? <p className="text-sm text-blue-700 mt-2">Decision: {log.decision_notes}</p> : null}
+                    {log.review_notes ? <p className="text-sm text-slate-500 mt-2">Review note: {log.review_notes}</p> : null}
                     {log.support_needed ? <p className="text-sm text-amber-700 mt-2">Support needed: {log.support_needed}</p> : null}
+                    <ConvertLearningLog logId={log.id} convertedToType={log.converted_to_type} convertedToId={log.converted_to_id} />
                   </div>
                 ))}
               </div>
@@ -84,8 +99,10 @@ export default async function ActionLabDetailPage({ params }: { params: Promise<
             <h2 className="font-semibold text-slate-900 mb-3">Team and review</h2>
             <Info label="Government counterpart" value={lab.government_counterpart} />
             <Info label="Solution anchor" value={demoProfiles.find((p) => p.id === lab.solution_anchor_id)?.full_name ?? 'To be assigned'} />
+            <Info label="Review owner" value={demoProfiles.find((p) => p.id === lab.review_owner_id)?.full_name ?? lab.government_counterpart ?? 'To be assigned'} />
             <Info label="Start date" value={lab.start_date} />
             <Info label="Next review" value={lab.next_review_date} />
+            <Info label="Latest review note" value={lab.review_notes} />
           </div>
 
           <div className="bg-white border border-slate-200 rounded-lg p-5">

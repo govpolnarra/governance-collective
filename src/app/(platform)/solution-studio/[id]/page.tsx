@@ -2,15 +2,22 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { demoPlaybooks, demoProfiles, demoSolutionPathways, demoSolutions } from '@/lib/data/demo'
+import PathwayBuilder from '../PathwayBuilder'
 
 export default async function SolutionPathwayDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createClient()
-  const { data } = await supabase
-    .from('solution_pathways')
-    .select('*, districts(district_name,state), action_labs(title)')
-    .eq('id', id)
-    .maybeSingle()
+  const [{ data }, { data: districts }, { data: actionLabs }, { data: solutions }, { data: expertsData }] = await Promise.all([
+    supabase
+      .from('solution_pathways')
+      .select('*, districts(district_name,state), action_labs(title)')
+      .eq('id', id)
+      .maybeSingle(),
+    supabase.from('districts').select('id,district_name,state').order('district_name'),
+    supabase.from('action_labs').select('id,title').order('updated_at', { ascending: false }),
+    supabase.from('solutions').select('id,name').eq('status', 'published').order('name'),
+    supabase.from('profiles').select('id,full_name,organisation').eq('is_approved', true).order('full_name'),
+  ])
 
   const pathway = data ?? demoSolutionPathways.find((item) => item.id === id)
   if (!pathway) notFound()
@@ -33,8 +40,22 @@ export default async function SolutionPathwayDetailPage({ params }: { params: Pr
 
       <div className="grid lg:grid-cols-[1.4fr_0.9fr] gap-5">
         <section className="space-y-5">
+          <PathwayBuilder
+            mode="edit"
+            pathway={pathway}
+            districts={(districts ?? []).map((district: any) => ({ id: district.id, label: `${district.district_name}, ${district.state}` }))}
+            actionLabs={(actionLabs ?? []).map((lab: any) => ({ id: lab.id, label: lab.title }))}
+            solutions={(solutions ?? []).map((solution: any) => ({ id: solution.id, label: solution.name ?? 'Untitled solution' }))}
+            experts={(expertsData ?? []).map((expert: any) => ({
+              id: expert.id,
+              label: expert.organisation ? `${expert.full_name ?? 'Unnamed'} · ${expert.organisation}` : expert.full_name ?? 'Unnamed',
+            }))}
+          />
           <BriefBlock title="Problem statement" body={pathway.problem_statement} />
-          <BriefBlock title="Actor changes required" body={pathway.actor_changes} />
+          <BriefBlock title="Root cause" body={pathway.root_cause} />
+          <BriefBlock title="Actors involved" body={pathway.actors ?? pathway.actor_changes} />
+          <BriefBlock title="Possible solutions" body={pathway.possible_solutions} />
+          <BriefBlock title="Adoption conditions" body={pathway.adoption_conditions} />
           <BriefBlock title="Sequencing plan" body={pathway.sequence} />
           <BriefBlock title="Measurement plan" body={pathway.measurement_plan} />
           <BriefBlock title="Risks" body={pathway.risks} />
